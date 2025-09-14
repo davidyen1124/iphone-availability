@@ -224,7 +224,12 @@
               td1.className = 'px-3 py-2 text-gray-900';
               td1.textContent = item.part.name;
               const price = item.part.price ? ('NT$' + Number(item.part.price).toLocaleString('zh-TW')) : '';
-              if (price){ const pz = document.createElement('span'); pz.className='ml-2 text-xs text-gray-500'; pz.textContent=price; td1.appendChild(pz); }
+              if (price){
+                const pz = document.createElement('div');
+                pz.className='mt-1 text-xs text-gray-500';
+                pz.textContent=price;
+                td1.appendChild(pz);
+              }
               const td2 = document.createElement('td');
               td2.className = 'px-3 py-2 text-right';
               td2.textContent = item.pickupQuote || (item.status === 'available' ? '可取貨' : '暫無供貨');
