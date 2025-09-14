@@ -53,14 +53,18 @@ async function fetchPartsFromBuyPage(conf, familySlug) {
 async function fetchIphonePartsForFamilies(conf, families) {
   const seen = new Set();
   const parts = [];
-  for (const slug of families) {
-    try {
-      const list = await fetchPartsFromBuyPage(conf, slug);
-      for (const p of list) {
-        if (!seen.has(p.partNumber)) { seen.add(p.partNumber); parts.push(p); }
+  // Fetch all family buy pages in parallel, but keep merge order by families[]
+  const results = await Promise.all(
+    families.map(slug =>
+      fetchPartsFromBuyPage(conf, slug).catch(() => []) // swallow per-family errors
+    )
+  );
+  for (const list of results) {
+    for (const p of list) {
+      if (!seen.has(p.partNumber)) {
+        seen.add(p.partNumber);
+        parts.push(p);
       }
-    } catch (e) {
-      // ignore missing family pages
     }
   }
   if (!parts.length) throw new Error("no iPhone 17 family parts discovered");
