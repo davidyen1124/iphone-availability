@@ -154,8 +154,14 @@ async function buildAvailabilityPayload(env) {
   }
   const stores = mergeStores(storesLists);
   const availability = normalizeAvailability(stores, parts);
-  // Keep payload lean: only models and availability are returned
-  return { generatedAt: new Date().toISOString(), models: parts, availability };
+  // Return compact top-level store list alongside models and availability
+  const compactStores = stores.map(s => ({
+    storeNumber: s.storeNumber,
+    storeName: s.storeName,
+    city: s.city,
+    url: s.hoursUrl || s.makeReservationUrl || s.reservationUrl,
+  }));
+  return { generatedAt: new Date().toISOString(), models: parts, stores: compactStores, availability };
 }
 
 async function putKV(env, key, json, ttlSeconds) {
