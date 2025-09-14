@@ -216,7 +216,7 @@
           const p = node.querySelector('p');
           const link = node.querySelector('a');
           h3.textContent = g.store.storeName;
-          p.textContent = (g.store.city || '') + ' · ' + (g.store.address || '');
+          p.textContent = g.store.city || '';
           link.href = g.store.url || '#';
           // Simplified: only keep a single store info link
           

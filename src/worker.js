@@ -46,7 +46,8 @@ async function fetchPartsFromBuyPage(conf, familySlug) {
   let metrics;
   try { metrics = JSON.parse(m[1]); } catch { throw new Error(`failed to parse metrics JSON for ${familySlug}`); }
   const products = (metrics?.data?.products || []).filter(p => p?.partNumber && p?.category === "iphone");
-  return products.map(p => ({ name: p.name || p.sku || p.partNumber, partNumber: p.partNumber, sku: p.sku || null, family: familySlug, price: p.price?.fullPrice }));
+  // Trim to only the fields the UI needs
+  return products.map(p => ({ name: p.name || p.sku || p.partNumber, partNumber: p.partNumber, price: p.price?.fullPrice }));
 }
 
 async function fetchIphonePartsForFamilies(conf, families) {
@@ -149,7 +150,8 @@ async function buildAvailabilityPayload(env) {
   }
   const stores = mergeStores(storesLists);
   const availability = normalizeAvailability(stores, parts);
-  return { generatedAt: new Date().toISOString(), models: parts, stores: stores.map(s => ({ storeNumber: s.storeNumber, storeName: s.storeName, city: s.city })), availability };
+  // Keep payload lean: only models and availability are returned
+  return { generatedAt: new Date().toISOString(), models: parts, availability };
 }
 
 async function putKV(env, key, json, ttlSeconds) {
