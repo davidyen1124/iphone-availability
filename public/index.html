@@ -138,7 +138,6 @@
           chip.appendChild(document.createTextNode(p.name||p.partNumber));
           elModels.appendChild(chip);
         }
-        wireInteractions();
         render();
       }
 
@@ -273,6 +272,10 @@
         }
       }
 
+      // Bind UI interactions once at startup
+      wireInteractions();
+
+      // Initial data load (subsequent refreshes won't re-bind interactions)
       load();
     </script>
   </body>
