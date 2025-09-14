@@ -662,19 +662,7 @@ export default {
           'access-control-allow-headers': 'Content-Type'
         }});
       }
-      if (url.pathname === "/" || url.pathname === "/index.html") {
-        // Edge cache the static shell so it serves fast world-wide
-        const cache = caches.default;
-        const cacheKey = new Request(url.origin + "/", { method: 'GET', headers: { 'accept': 'text/html' } });
-        let hit = await cache.match(cacheKey);
-        if (hit) return hit;
-        const res = renderIndexHtml();
-        // Add SWR style headers for the HTML shell (longer edge TTL)
-        const r2 = new Response(res.body, res);
-        r2.headers.set('Cache-Control', 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400');
-        ctx.waitUntil(cache.put(cacheKey, r2.clone()));
-        return r2;
-      }
+      // Static site (/) is served from public/ by Wrangler assets.
       if (url.pathname === "/api/availability") {
         return await handleApiAvailability(env, ctx, url);
       }
