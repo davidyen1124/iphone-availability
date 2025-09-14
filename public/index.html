@@ -80,15 +80,7 @@
         <div class="p-4">
           <h3 class="font-semibold text-base"></h3>
           <p class="text-sm text-gray-500"></p>
-          <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <span data-status class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"></span>
-            <span data-hours class="text-gray-600"></span>
-          </div>
-          <div class="mt-2 flex flex-wrap gap-2">
-            <a data-map class="rounded-lg border px-2 py-1 text-sm hover:bg-gray-50" target="_blank" rel="noreferrer">地圖</a>
-            <a data-phone class="rounded-lg border px-2 py-1 text-sm hover:bg-gray-50">撥打電話</a>
-          </div>
-          <a class="mt-2 inline-block text-brand-700 text-sm hover:underline" target="_blank" rel="noreferrer">門市資訊 →</a>
+          <a class="mt-2 inline-block text-brand-700 text-sm hover:underline" target="_blank" rel="noreferrer">前往門市資訊 →</a>
         </div>
         <div class="border-t">
           <table class="w-full text-sm">
@@ -226,28 +218,8 @@
           h3.textContent = g.store.storeName;
           p.textContent = (g.store.city || '') + ' · ' + (g.store.address || '');
           link.href = g.store.url || '#';
-          const st = node.querySelector('[data-status]');
-          const hr = node.querySelector('[data-hours]');
-          const map = node.querySelector('[data-map]');
-          const phone = node.querySelector('[data-phone]');
-          if (st) {
-            st.textContent = g.store.isOpen ? '營業中' : '已打烊';
-            st.className = 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ' + (g.store.isOpen ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700');
-          }
-          if (hr) {
-            hr.textContent = g.store.todayHours ? ('今日營業：' + g.store.todayHours) : '營業時間請見門市頁面';
-          }
-          if (map && g.store.mapsUrl) {
-            map.href = g.store.mapsUrl;
-          } else if (map) {
-            map.style.display = 'none';
-          }
-          if (phone && g.store.phoneHref) {
-            phone.href = g.store.phoneHref;
-          } else if (phone) {
-            phone.style.display = 'none';
-          }
-
+          // Simplified: only keep a single store info link
+          
           // Build family summaries and grouped rows
           const famOrder = ['Air','Pro Max','Pro','Standard'];
           const groups = new Map();
@@ -305,4 +277,3 @@
     </script>
   </body>
   </html>
-

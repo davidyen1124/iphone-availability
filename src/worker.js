@@ -102,108 +102,13 @@ function mergeStores(storesArr) {
  */
 function normalizeAvailability(stores, parts) {
   const out = [];
-  // Helpers for hours/open status in Asia/Taipei
-  const zhDays = ['週日','週一','週二','週三','週四','週五','週六'];
-  function getTaipeiNow() {
-    const fmt = new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', hourCycle: 'h23', hour: '2-digit', minute: '2-digit', weekday: 'short' });
-    const parts = fmt.formatToParts(new Date());
-    const hh = parts.find(p=>p.type==='hour')?.value || '00';
-    const mm = parts.find(p=>p.type==='minute')?.value || '00';
-    const weekday = parts.find(p=>p.type==='weekday')?.value || '週日';
-    const minutes = parseInt(hh,10)*60 + parseInt(mm,10);
-    return { weekday, minutes };
-  }
-  const nowTW = getTaipeiNow();
-
-  function expandChineseDays(str) {
-    if (!str) return new Set();
-    const clean = String(str).replace(/：|:/g,'').replace(/\s+/g,'');
-    const tokens = clean.split(/,|，|、/).filter(Boolean);
-    const set = new Set();
-    for (const tk of tokens) {
-      const m = tk.match(/(週[一二三四五六日])(?:-(週[一二三四五六日]))?/);
-      if (m) {
-        const a = zhDays.indexOf(m[1]);
-        const b = m[2] ? zhDays.indexOf(m[2]) : -1;
-        if (a >= 0 && b >= 0) {
-          for (let i=a;i<=b;i++) set.add(zhDays[i]);
-        } else if (a >= 0) {
-          set.add(zhDays[a]);
-        }
-      }
-    }
-    return set;
-  }
-
-  function parseCNTimeToken(tok) {
-    if (!tok) return null;
-    const t = tok.replace(/\s+/g,'');
-    const am = t.includes('上午') || t.toLowerCase().includes('am');
-    const pm = t.includes('下午') || t.toLowerCase().includes('pm');
-    const hm = t.replace('上午','').replace('下午','').replace(/am|pm/ig,'');
-    const [hStr,mStr] = hm.split(':');
-    let h = parseInt(hStr,10);
-    let m = parseInt(mStr||'0',10);
-    if (pm && h < 12) h += 12;
-    if (am && h === 12) h = 0;
-    return h*60 + m;
-  }
-
-  function computeOpenNow(hoursRows) {
-    let todayHours = null;
-    let isOpen = false;
-    for (const row of hoursRows) {
-      const daysSet = expandChineseDays(row.storeDays || row.days);
-      if (!daysSet.size || !daysSet.has(nowTW.weekday)) continue;
-      const [startRaw, endRaw] = String(row.storeTimings || row.timings || '').split('-').map(s=>s.trim());
-      const startMin = parseCNTimeToken(startRaw);
-      const endMin = parseCNTimeToken(endRaw);
-      if (startMin != null && endMin != null) {
-        todayHours = `${startRaw} - ${endRaw}`;
-        let end = endMin;
-        let now = nowTW.minutes;
-        if (end < startMin) end += 1440;
-        if (now < startMin && (end - startMin) > 720) now += 1440;
-        if (now >= startMin && now <= end) isOpen = true;
-        break;
-      }
-    }
-    return { isOpen, todayHours };
-  }
-
   for (const s of stores) {
     const baseStore = {
       storeNumber: s.storeNumber,
       storeName: s.storeName,
       city: s.city,
-      phoneNumber: s.phoneNumber || s.retailStore?.phoneNumber,
-      address: s.address?.address2 ? `${s.address.address2}${s.address.address3 ? " " + s.address.address3 : ""}` : s.retailStore?.address?.street,
       url: s.hoursUrl || s.makeReservationUrl || s.reservationUrl,
-      latitude: s.storelatitude || s.retailStore?.latitude,
-      longitude: s.storelongitude || s.retailStore?.longitude,
-      image: s.storeImageUrl,
-      hoursRows: (() => {
-        const rows = [];
-        if (Array.isArray(s.storeHours?.hours)) rows.push(...s.storeHours.hours);
-        if (Array.isArray(s.storeHours)) rows.push(...s.storeHours);
-        if (Array.isArray(s.retailStore?.storeHours)) rows.push(...s.retailStore.storeHours);
-        return rows.map(r => ({ storeDays: r.storeDays || r.days, storeTimings: r.storeTimings || r.timings }));
-      })(),
     };
-
-    const oc = computeOpenNow(baseStore.hoursRows || []);
-    baseStore.isOpen = oc.isOpen;
-    baseStore.todayHours = oc.todayHours;
-    const lat = baseStore.latitude, lon = baseStore.longitude;
-    if (lat && lon) {
-      baseStore.mapsUrl = `https://maps.apple.com/?ll=${encodeURIComponent(lat+','+lon)}&q=${encodeURIComponent(baseStore.storeName || 'Apple Store')}`;
-    } else if (baseStore.address || baseStore.storeName) {
-      baseStore.mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((baseStore.storeName||'Apple Store') + ' ' + (baseStore.address||''))}`;
-    }
-    if (baseStore.phoneNumber) {
-      const digits = String(baseStore.phoneNumber).replace(/[^+\d]/g,'');
-      baseStore.phoneHref = `tel:${digits}`;
-    }
 
     for (const part of parts) {
       const pa = s.partsAvailability?.[part.partNumber];
