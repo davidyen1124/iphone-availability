@@ -1,0 +1,16 @@
+{
+  "name": "iphone-availability-tw",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev --local",
+    "format": "echo 'no formatter configured'"
+  },
+  "devDependencies": {
+    "wrangler": "^3.80.0"
+  }
+}
+

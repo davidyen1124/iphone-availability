@@ -1,0 +1,18 @@
+name = "iphone-availability-tw"
+main = "src/worker.js"
+compatibility_date = "2025-09-13"
+workers_dev = true
+
+[vars]
+# Comma-separated seeds used to find TW stores via Apple's API
+LOCATION_SEEDS = "Taiwan,Taipei,Taichung,Kaohsiung,Tainan,Hsinchu,Taoyuan"
+APPLE_BASE = "https://www.apple.com"
+REGION_PATH = "/tw"
+FAMILIES = "iphone-17,iphone-17-pro,iphone-air"
+
+[[kv_namespaces]]
+binding = "AVAIL_KV"
+id = "fff4c4d14e4a40e1b3d777f625fbadf9"
+
+[triggers]
+crons = ["*/5 * * * *"]
