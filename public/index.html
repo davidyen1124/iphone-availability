@@ -120,25 +120,34 @@
       async function load(force=false){
         const url = new URL('/api/availability', location.origin);
         if (force) url.searchParams.set('force','1');
-        const res = await fetch(url.toString());
-        const data = await res.json();
-        state.data = data;
-        const t = new Date(data.generatedAt || Date.now());
-        elUpdated.textContent = '資料時間：' + t.toLocaleString('zh-TW');
+        try {
+          const res = await fetch(url.toString());
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          state.data = data;
+          const t = new Date(data.generatedAt || Date.now());
+          elUpdated.textContent = '資料時間：' + t.toLocaleString('zh-TW');
 
-        // build model chips
-        elModels.innerHTML = '';
-        const seen = new Set();
-        for (const p of data.models||[]){
-          if (seen.has(p.partNumber)) continue; seen.add(p.partNumber);
-          const chip = document.createElement('span');
-          chip.className = 'inline-flex items-center gap-2 rounded-full border px-2 py-1 text-xs';
-          const dot = document.createElement('span'); dot.className='inline-block w-1.5 h-1.5 rounded-full bg-brand-600';
-          chip.appendChild(dot);
-          chip.appendChild(document.createTextNode(p.name||p.partNumber));
-          elModels.appendChild(chip);
+          // build model chips
+          elModels.innerHTML = '';
+          const seen = new Set();
+          for (const p of data.models||[]){
+            if (seen.has(p.partNumber)) continue; seen.add(p.partNumber);
+            const chip = document.createElement('span');
+            chip.className = 'inline-flex items-center gap-2 rounded-full border px-2 py-1 text-xs';
+            const dot = document.createElement('span'); dot.className='inline-block w-1.5 h-1.5 rounded-full bg-brand-600';
+            chip.appendChild(dot);
+            chip.appendChild(document.createTextNode(p.name||p.partNumber));
+            elModels.appendChild(chip);
+          }
+          render();
+        } catch (err) {
+          console.error('Failed to load availability:', err);
+          state.data = null;
+          elUpdated.textContent = '載入失敗，請稍後再試';
+          elModels.innerHTML = '';
+          elStores.innerHTML = '';
         }
-        render();
       }
 
       elRefresh.addEventListener('click', ()=>load(true));
