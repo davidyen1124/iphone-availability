@@ -3,6 +3,9 @@ main = "src/worker.js"
 compatibility_date = "2025-09-13"
 workers_dev = true
 
+# Serve static files from ./public (index.html, etc.)
+assets = { directory = "public", binding = "ASSETS", run_worker_first = false }
+
 [vars]
 # Comma-separated seeds used to find TW stores via Apple's API
 LOCATION_SEEDS = "Taiwan,Taipei,Taichung,Kaohsiung,Tainan,Hsinchu,Taoyuan"
