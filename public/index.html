@@ -166,7 +166,8 @@
         // group availability by store with filters
         const byStore = new Map();
         for (const a of state.data.availability){
-          if (state.onlyAvail && a.status !== 'available') continue;
+          // Treat either explicit buyable flag or 'available' status as available
+          if (state.onlyAvail && !(a.isBuyable || a.status === 'available')) continue;
           const fam = familyOf(a.part);
           if (state.families.size && !state.families.has(fam)) continue;
           const key = a.store.storeNumber || a.store.storeName;
@@ -206,7 +207,12 @@
               const td1 = document.createElement('td');
               td1.className = 'px-3 py-2 text-gray-900';
               td1.textContent = item.part.name;
-              const price = item.part.price ? ('NT$' + Number(item.part.price).toLocaleString('en-US')) : '';
+              // Robust price formatting: prefer numeric; fall back to raw string
+              let price = '';
+              if (item.part?.price !== undefined && item.part?.price !== null) {
+                const n = Number(item.part.price);
+                price = Number.isFinite(n) ? ('NT$' + n.toLocaleString('en-US')) : String(item.part.price);
+              }
               if (price){
                 const pz = document.createElement('div');
                 pz.className='mt-1 text-xs text-gray-500';
@@ -215,7 +221,7 @@
               }
               const td2 = document.createElement('td');
               td2.className = 'px-3 py-2 text-right';
-              td2.textContent = item.pickupQuote || (item.status === 'available' ? 'Available' : 'Unavailable');
+              td2.textContent = item.pickupQuote || ((item.isBuyable || item.status === 'available') ? 'Available' : 'Unavailable');
               tr.appendChild(td1); tr.appendChild(td2);
               tbody.appendChild(tr);
             }
