@@ -133,27 +133,27 @@
       elReset.addEventListener('click', ()=>{ state.families.clear(); document.querySelector('[data-family=all]')?.click(); render(); });
 
       function wireInteractions(){
-        elFamilyFilters.querySelectorAll('button[data-family]').forEach(btn => {
-          btn.addEventListener('click', ()=>{
-            const f = btn.getAttribute('data-family');
-            if (f === 'all') {
-              state.families.clear();
-              elFamilyFilters.querySelectorAll('button[data-family]').forEach(b=>b.classList.remove('bg-gray-900','text-white'));
-              btn.classList.add('bg-gray-900','text-white');
+        elFamilyFilters.addEventListener('click', e => {
+          const btn = e.target.closest('button[data-family]');
+          if (!btn) return;
+          const f = btn.getAttribute('data-family');
+          if (f === 'all') {
+            state.families.clear();
+            elFamilyFilters.querySelectorAll('button[data-family]').forEach(b=>b.classList.remove('bg-gray-900','text-white'));
+            btn.classList.add('bg-gray-900','text-white');
+          } else {
+            // toggle selection
+            if (state.families.has(f)) {
+              state.families.delete(f);
+              btn.classList.remove('bg-gray-900','text-white');
             } else {
-              // toggle selection
-              if (state.families.has(f)) {
-                state.families.delete(f);
-                btn.classList.remove('bg-gray-900','text-white');
-              } else {
-                state.families.add(f);
-                btn.classList.add('bg-gray-900','text-white');
-                // clear "All" highlight
-                elFamilyFilters.querySelector('[data-family=all]')?.classList.remove('bg-gray-900','text-white');
-              }
+              state.families.add(f);
+              btn.classList.add('bg-gray-900','text-white');
+              // clear "All" highlight
+              elFamilyFilters.querySelector('[data-family=all]')?.classList.remove('bg-gray-900','text-white');
             }
-            render();
-          });
+          }
+          render();
         });
         // Highlight "All" initially
         elFamilyFilters.querySelector('[data-family=all]')?.classList.add('bg-gray-900','text-white');
