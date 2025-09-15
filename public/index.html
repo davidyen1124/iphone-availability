@@ -76,7 +76,7 @@
             <thead class="bg-gray-50 text-gray-600">
               <tr>
                 <th class="text-left px-3 py-2">Model</th>
-                <th class="text-right px-3 py-2">Pickup date</th>
+                <th class="text-right px-3 py-2">Pickup status</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -94,6 +94,12 @@
       const elFamilyFilters = document.getElementById('familyFilters');
       const elReset = document.getElementById('resetFilters');
       const tmplStore = document.getElementById('store-card');
+
+      // Remove any non-ASCII characters to avoid showing Chinese/Japanese/Korean text
+      function sanitizeLatin(str){
+        if (!str) return '';
+        return String(str).replace(/[^\x20-\x7E]/g, '').replace(/\s+/g,' ').trim();
+      }
 
       function familyOf(part){
         const n = (part?.name||'').toLowerCase();
@@ -190,9 +196,9 @@
           const node = tmplStore.content.cloneNode(true);
           const h3 = node.querySelector('h3');
           const link = node.querySelector('a');
-          h3.textContent = g.store.storeName;
+          h3.textContent = sanitizeLatin(g.store.storeName);
           link.href = g.store.url || '#';
-          link.setAttribute('aria-label', 'View store info for ' + g.store.storeName);
+          link.setAttribute('aria-label', 'View store info for ' + sanitizeLatin(g.store.storeName));
           // Simplified: only keep a single store info link
           
           // Build grouped rows (no summary chips)
@@ -217,7 +223,7 @@
               tr.className = 'border-t';
               const td1 = document.createElement('td');
               td1.className = 'px-3 py-2 text-gray-900';
-              td1.textContent = item.part.name;
+              td1.textContent = sanitizeLatin(item.part.name);
               // Robust price formatting: prefer numeric; fall back to raw string
               let price = '';
               if (item.part?.price !== undefined && item.part?.price !== null) {
@@ -232,7 +238,8 @@
               }
               const td2 = document.createElement('td');
               td2.className = 'px-3 py-2 text-right';
-              td2.textContent = item.pickupQuote || ((item.isBuyable || item.status === 'available') ? 'Available' : 'Unavailable');
+              // Always show English-only status; never render Apple's localized pickup text
+              td2.textContent = (item.isBuyable || item.status === 'available') ? 'Available' : 'Unavailable';
               tr.appendChild(td1); tr.appendChild(td2);
               tbody.appendChild(tr);
             }
