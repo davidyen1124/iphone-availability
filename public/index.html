@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="zh-Hant-TW">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>iPhone 17 系列台灣門市供貨</title>
-    <meta name="description" content="自動擷取 apple.com/tw 的 iPhone 17 門市取貨可用日。" />
+    <title>iPhone 17 Taiwan Store Availability</title>
+    <meta name="description" content="Automatically fetches iPhone 17 in‑store pickup availability from apple.com/tw." />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -29,12 +29,12 @@
     <header class="sticky top-0 z-30 border-b bg-white/70 backdrop-blur supports-[backdrop-filter]:glass">
       <div class="mx-auto max-w-5xl px-4 py-3 flex items-center gap-3">
         <div>
-          <h1 class="text-lg font-semibold leading-tight">iPhone 17 系列台灣門市供貨</h1>
-          <p id="subtitle" class="text-xs text-gray-500">即時擷取 Apple 官網資料</p>
+          <h1 class="text-lg font-semibold leading-tight">iPhone 17 Taiwan Store Availability</h1>
+          <p id="subtitle" class="text-xs text-gray-500">Live data from Apple’s website</p>
         </div>
         <div class="ml-auto flex items-center gap-2">
-          <button id="refreshBtn" class="rounded-lg bg-brand-600 text-white px-3 py-1.5 text-sm hover:bg-brand-700 active:scale-[.98] transition">重新整理</button>
-          <button id="toggleOnlyAvail" class="rounded-lg border px-3 py-1.5 text-sm">只看可取貨</button>
+          <button id="refreshBtn" class="rounded-lg bg-brand-600 text-white px-3 py-1.5 text-sm hover:bg-brand-700 active:scale-[.98] transition">Refresh</button>
+          <button id="toggleOnlyAvail" class="rounded-lg border px-3 py-1.5 text-sm">Only show available</button>
         </div>
       </div>
     </header>
@@ -43,22 +43,22 @@
       <section class="mb-4">
         <div class="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 overflow-hidden">
           <div class="p-4 sm:p-6">
-            <p id="updated" class="text-sm text-gray-500">載入中…</p>
+            <p id="updated" class="text-sm text-gray-500">Loading…</p>
             <div class="mt-3 flex flex-wrap items-center gap-2" id="familyFilters">
-              <span class="text-xs text-gray-500 mr-1">快速篩選：</span>
-              <button data-family="all" class="rounded-full border px-3 py-1 text-xs">全部</button>
-              <button data-family="Standard" class="rounded-full border px-3 py-1 text-xs">標準款</button>
+              <span class="text-xs text-gray-500 mr-1">Quick filters:</span>
+              <button data-family="all" class="rounded-full border px-3 py-1 text-xs">All</button>
+              <button data-family="Standard" class="rounded-full border px-3 py-1 text-xs">Standard</button>
               <button data-family="Pro" class="rounded-full border px-3 py-1 text-xs">Pro</button>
               <button data-family="Pro Max" class="rounded-full border px-3 py-1 text-xs">Pro Max</button>
               <button data-family="Air" class="rounded-full border px-3 py-1 text-xs">Air</button>
             </div>
             <div class="mt-3 flex flex-wrap items-center gap-2" id="controls">
-              <label class="text-sm text-gray-600 hidden sm:inline">排序</label>
+              <label class="text-sm text-gray-600 hidden sm:inline">Sort</label>
               <select id="sortBy" class="rounded-lg border px-2 py-1.5 text-sm">
-                <option value="store">門市名稱</option>
-                <option value="available">可取貨優先</option>
+                <option value="store">Store name</option>
+                <option value="available">Available first</option>
               </select>
-              <button id="resetFilters" class="rounded-lg border px-3 py-1.5 text-sm">重設</button>
+              <button id="resetFilters" class="rounded-lg border px-3 py-1.5 text-sm">Reset</button>
             </div>
           </div>
         </div>
@@ -74,14 +74,14 @@
       <article class="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 overflow-hidden flex flex-col">
         <div class="p-4">
           <h3 class="font-semibold text-base"></h3>
-          <a class="mt-2 inline-block text-brand-700 text-sm hover:underline" target="_blank" rel="noopener noreferrer">前往門市資訊 →</a>
+          <a class="mt-2 inline-block text-brand-700 text-sm hover:underline" target="_blank" rel="noopener noreferrer">View store info →</a>
         </div>
         <div class="border-t">
           <table class="w-full text-sm">
             <thead class="bg-gray-50 text-gray-600">
               <tr>
-                <th class="text-left px-3 py-2">機型</th>
-                <th class="text-right px-3 py-2">取貨日</th>
+                <th class="text-left px-3 py-2">Model</th>
+                <th class="text-right px-3 py-2">Pickup date</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -118,13 +118,13 @@
           const data = await res.json();
           state.data = data;
           const t = new Date(data.generatedAt || Date.now());
-          elUpdated.textContent = '資料時間：' + t.toLocaleString('zh-TW');
+          elUpdated.textContent = 'Updated: ' + t.toLocaleString('en-US');
 
           render();
         } catch (err) {
           console.error('Failed to load availability:', err);
           state.data = null;
-          elUpdated.textContent = '載入失敗，請稍後再試';
+          elUpdated.textContent = 'Load failed. Please try again later.';
           elStores.innerHTML = '';
         }
       }
@@ -155,14 +155,14 @@
               } else {
                 state.families.add(f);
                 btn.classList.add('bg-gray-900','text-white');
-                // clear "全部" highlight
+                // clear "All" highlight
                 elFamilyFilters.querySelector('[data-family=all]')?.classList.remove('bg-gray-900','text-white');
               }
             }
             render();
           });
         });
-        // Highlight "全部" initially
+        // Highlight "All" initially
         elFamilyFilters.querySelector('[data-family=all]')?.classList.add('bg-gray-900','text-white');
       }
 
@@ -223,7 +223,7 @@
               const td1 = document.createElement('td');
               td1.className = 'px-3 py-2 text-gray-900';
               td1.textContent = item.part.name;
-              const price = item.part.price ? ('NT$' + Number(item.part.price).toLocaleString('zh-TW')) : '';
+              const price = item.part.price ? ('NT$' + Number(item.part.price).toLocaleString('en-US')) : '';
               if (price){
                 const pz = document.createElement('div');
                 pz.className='mt-1 text-xs text-gray-500';
@@ -232,7 +232,7 @@
               }
               const td2 = document.createElement('td');
               td2.className = 'px-3 py-2 text-right';
-              td2.textContent = item.pickupQuote || (item.status === 'available' ? '可取貨' : '暫無供貨');
+              td2.textContent = item.pickupQuote || (item.status === 'available' ? 'Available' : 'Unavailable');
               tr.appendChild(td1); tr.appendChild(td2);
               tbody.appendChild(tr);
             }

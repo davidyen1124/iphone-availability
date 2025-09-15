@@ -119,13 +119,13 @@ function normalizeAvailability(stores, parts) {
       const pa = s.partsAvailability?.[part.partNumber];
       if (!pa) continue;
       const msg = pa.messageTypes?.regular;
-      const pickupQuote = pa.pickupSearchQuote || msg?.storePickupQuote || "目前無法提供";
+      const pickupQuote = pa.pickupSearchQuote || msg?.storePickupQuote || "Not currently available";
       out.push({
         store: baseStore,
         part: part,
         status: pa.pickupDisplay || (pa.buyability?.isBuyable ? "available" : "unavailable"),
         isBuyable: !!pa.buyability?.isBuyable,
-        pickupType: pa.pickupType || "店內取貨",
+        pickupType: pa.pickupType || "In-store pickup",
         pickupQuote: pickupQuote,
       });
     }
