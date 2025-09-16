@@ -166,7 +166,6 @@ function makeJSON(data, { browserMaxAge = 0, edgeMaxAge = 20, swr = 90 } = {}) {
 function availabilityCacheKey(url) {
   const keyUrl = new URL(url);
   keyUrl.searchParams.delete('force');
-  keyUrl.searchParams.delete('refresh');
   return new Request(keyUrl.toString(), { method: 'GET', headers: { 'accept': 'application/json' } });
 }
 
@@ -177,7 +176,7 @@ async function refreshAvailabilityKV(env) {
 }
 
 async function handleApiAvailability(env, ctx, url) {
-  const force = url.searchParams.get('force') === '1' || url.searchParams.get('refresh') === '1';
+  const force = url.searchParams.get('force') === '1';
   const cache = caches.default;
   const cacheKey = availabilityCacheKey(url);
 
