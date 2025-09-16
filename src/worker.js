@@ -243,9 +243,6 @@ export default {
       if (url.pathname === "/api/availability") {
         return await handleApiAvailability(env, ctx, url);
       }
-      if (url.pathname === "/healthz") {
-        return new Response("ok", { status: 200 });
-      }
       return new Response("Not Found", { status: 404 });
     } catch (err) {
       const message = err instanceof Error ? err.message : "unknown error";
