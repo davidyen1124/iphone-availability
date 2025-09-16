@@ -2,7 +2,7 @@
 
 If you’re hunting iPhone 17 pickup slots across Taiwan and also enjoy software that doesn’t take itself too seriously, you’ve come to the right repo. This Cloudflare Worker scrapes Apple’s public endpoints, caches the results, and serves a slick UI.
 
-![Freshly baked screenshot](assets/screenshot.png)
+![Freshly baked screenshot](screenshot.png)
 
 Warning: If availability is zero, it’s not a bug — it’s just Apple doing Apple things.
 
