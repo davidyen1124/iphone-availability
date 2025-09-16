@@ -186,19 +186,11 @@ async function handleApiAvailability(env, ctx, url) {
     if (edgeHit) {
       return edgeHit;
     }
-    // 2) Fall back to KV snapshot (instant), and refresh in background
+    // 2) Fall back to KV snapshot (instant) and warm the edge cache
     const cached = await getKV(env, 'availability.latest');
     if (cached) {
       const payload = { source: 'kv', ...cached };
       const res = makeJSON(payload, computeTtls(payload));
-      ctx.waitUntil((async () => {
-        try {
-          const fresh = await refreshAvailabilityKV(env);
-          const freshPayload = { source: 'fresh', ...fresh };
-          const freshRes = makeJSON(freshPayload, computeTtls(freshPayload));
-          await cache.put(cacheKey, freshRes.clone());
-        } catch {}
-      })());
       // Seed edge cache with KV data so subsequent hits are instant from edge
       ctx.waitUntil(cache.put(cacheKey, res.clone()));
       return res;
