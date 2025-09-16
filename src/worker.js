@@ -1,12 +1,7 @@
-// Cloudflare Worker: iPhone 17 pickup availability for Apple Taiwan
-// - Scrapes part numbers from the official /tw buy page (script#metrics)
-// - Calls Apple's fulfillment-messages API to retrieve in-store pickup windows
-// - Serves a Tailwind mobile-first UI and a JSON API
-
 const DEFAULT_APPLE_BASE = "https://www.apple.com";
-const DEFAULT_REGION_PATH = "/tw"; // e.g., /tw
+const DEFAULT_REGION_PATH = "/tw";
 const DEFAULT_LOCATION_SEEDS = ["Taiwan"];
-const DEFAULT_FAMILIES = ["iphone-17", "iphone-17-pro", "iphone-air"]; // auto-merge across these pages
+const DEFAULT_FAMILIES = ["iphone-17", "iphone-17-pro", "iphone-air"];
 
 function getConfig(env) {
   return {
@@ -17,9 +12,6 @@ function getConfig(env) {
   };
 }
 
-/**
- * Utility: build URL with query string params
- */
 function buildURL(base, params) {
   const url = new URL(base);
   Object.entries(params).forEach(([k, v]) => {
@@ -32,10 +24,6 @@ function buildURL(base, params) {
   return url;
 }
 
-/**
- * Extract part numbers for iPhone 17 models from the buy page.
- * Returns an array of { name, partNumber, sku }.
- */
 async function fetchPartsFromBuyPage(conf, familySlug) {
   const buyUrl = `${conf.APPLE_BASE}${conf.REGION_PATH}/shop/buy-iphone/${familySlug}`;
   const res = await fetch(buyUrl, { headers: { "User-Agent": "Mozilla/5.0 (compatible; iPhoneAvailabilityWorker/1.0)" } });
@@ -67,13 +55,10 @@ async function fetchIphonePartsForFamilies(conf, families) {
       }
     }
   }
-  if (!parts.length) throw new Error("no iPhone 17 family parts discovered");
+  if (!parts.length) throw new Error("no iPhone family parts discovered");
   return parts;
 }
 
-/**
- * Call Apple fulfillment API for the given partNumbers and seed location.
- */
 async function fetchFulfillmentForSeed(conf, partNumbers, seed) {
   const url = buildURL(`${conf.APPLE_BASE}${conf.REGION_PATH}/shop/fulfillment-messages`, {
     pl: true,
@@ -88,9 +73,6 @@ async function fetchFulfillmentForSeed(conf, partNumbers, seed) {
   return json?.body?.content?.pickupMessage?.stores || [];
 }
 
-/**
- * Merge stores from multiple seeds by unique storeNumber.
- */
 function mergeStores(storesArr) {
   const map = new Map();
   for (const list of storesArr) {
@@ -102,9 +84,6 @@ function mergeStores(storesArr) {
   return Array.from(map.values());
 }
 
-/**
- * Normalize availability entries into a compact structure per store per part.
- */
 function normalizeAvailability(stores, parts) {
   const out = [];
   for (const s of stores) {
@@ -133,14 +112,7 @@ function normalizeAvailability(stores, parts) {
   return out;
 }
 
-/**
- * Render the HTML UI (Tailwind CDN, mobile-first)
- */
-
-/**
- * API handler: GET /api/availability
- */
-async function buildAvailabilityPayload(env) {
+async function fetchAvailabilitySnapshot(env) {
   const conf = getConfig(env);
   const parts = await fetchIphonePartsForFamilies(conf, conf.FAMILIES);
   const storesLists = [];
@@ -189,18 +161,17 @@ function makeJSON(data, { browserMaxAge = 0, edgeMaxAge = 20, swr = 90 } = {}) {
 function availabilityCacheKey(url) {
   const keyUrl = new URL(url);
   keyUrl.searchParams.delete('force');
-  keyUrl.searchParams.delete('refresh');
   return new Request(keyUrl.toString(), { method: 'GET', headers: { 'accept': 'application/json' } });
 }
 
 async function refreshAvailabilityKV(env) {
-  const payload = await buildAvailabilityPayload(env);
+  const payload = await fetchAvailabilitySnapshot(env);
   await putKV(env, 'availability.latest', payload, 60 * 15); // 15 min safety TTL
   return payload;
 }
 
 async function handleApiAvailability(env, ctx, url) {
-  const force = url.searchParams.get('force') === '1' || url.searchParams.get('refresh') === '1';
+  const force = url.searchParams.get('force') === '1';
   const cache = caches.default;
   const cacheKey = availabilityCacheKey(url);
 
@@ -232,16 +203,17 @@ async function handleApiAvailability(env, ctx, url) {
       ctx.waitUntil(cache.put(cacheKey, res.clone()));
       return res;
     }
-    // 3) Warm start: trigger background build and return placeholder
-    ctx.waitUntil((async () => {
-      try {
-        const fresh = await refreshAvailabilityKV(env);
-        const freshRes = makeJSON({ source: 'fresh', ...fresh }, { browserMaxAge: 5, edgeMaxAge: 60, swr: 300 });
-        await cache.put(cacheKey, freshRes.clone());
-      } catch {}
-    })());
-    const warm = { source: 'warmup', generatedAt: new Date().toISOString(), models: [], stores: [], availability: [] };
-    return makeJSON(warm, computeTtls(warm));
+    // 3) No cached data anywhere: build synchronously so clients get real data
+    try {
+      const fresh = await refreshAvailabilityKV(env);
+      const freshPayload = { source: 'fresh', ...fresh };
+      const freshRes = makeJSON(freshPayload, computeTtls(freshPayload));
+      ctx.waitUntil(cache.put(cacheKey, freshRes.clone()));
+      return freshRes;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'unable to refresh availability';
+      return makeJSON({ error: message }, { browserMaxAge: 0, edgeMaxAge: 0, swr: 0 });
+    }
   }
 
   // Force: compute fresh, update KV and edge cache, return now
@@ -263,12 +235,8 @@ export default {
           'access-control-allow-headers': 'Content-Type'
         }});
       }
-      // Static site (/) is served from public/ by Wrangler assets.
       if (url.pathname === "/api/availability") {
         return await handleApiAvailability(env, ctx, url);
-      }
-      if (url.pathname === "/healthz") {
-        return new Response("ok", { status: 200 });
       }
       return new Response("Not Found", { status: 404 });
     } catch (err) {
@@ -279,7 +247,6 @@ export default {
       });
     }
   },
-  // Cron job to refresh KV
   async scheduled(event, env, ctx) {
     await refreshAvailabilityKV(env);
   }
