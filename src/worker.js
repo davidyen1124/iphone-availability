@@ -203,16 +203,17 @@ async function handleApiAvailability(env, ctx, url) {
       ctx.waitUntil(cache.put(cacheKey, res.clone()));
       return res;
     }
-    // 3) Warm start: trigger background build and return placeholder
-    ctx.waitUntil((async () => {
-      try {
-        const fresh = await refreshAvailabilityKV(env);
-        const freshRes = makeJSON({ source: 'fresh', ...fresh }, { browserMaxAge: 5, edgeMaxAge: 60, swr: 300 });
-        await cache.put(cacheKey, freshRes.clone());
-      } catch {}
-    })());
-    const warm = { source: 'warmup', generatedAt: new Date().toISOString(), models: [], stores: [], availability: [] };
-    return makeJSON(warm, computeTtls(warm));
+    // 3) No cached data anywhere: build synchronously so clients get real data
+    try {
+      const fresh = await refreshAvailabilityKV(env);
+      const freshPayload = { source: 'fresh', ...fresh };
+      const freshRes = makeJSON(freshPayload, computeTtls(freshPayload));
+      ctx.waitUntil(cache.put(cacheKey, freshRes.clone()));
+      return freshRes;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'unable to refresh availability';
+      return makeJSON({ error: message }, { browserMaxAge: 0, edgeMaxAge: 0, swr: 0 });
+    }
   }
 
   // Force: compute fresh, update KV and edge cache, return now
