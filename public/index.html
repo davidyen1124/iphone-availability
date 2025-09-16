@@ -52,13 +52,15 @@
             </div>
             <div class="mt-3 flex flex-wrap items-center gap-2" id="controls" role="toolbar" aria-label="Results controls">
               <button id="refreshBtn" class="rounded-lg bg-brand-600 text-white px-3 py-1.5 text-sm hover:bg-brand-700 active:scale-[.98] transition" aria-label="Refresh availability">Refresh</button>
-              <button id="toggleOnlyAvail" class="rounded-lg border px-3 py-1.5 text-sm" aria-pressed="false" aria-controls="stores">Only show available</button>
             </div>
           </div>
         </div>
       </section>
 
       <section>
+        <div id="emptyState" class="hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 px-4 py-6 text-sm text-gray-600 text-center" role="status" aria-live="polite">
+          <p id="emptyStateMessage">No pickup slots available right now. Try refreshing later.</p>
+        </div>
         <!-- Responsive grid: 1 column on mobile/tablet, 2 on desktop -->
         <div id="stores" class="grid grid-cols-1 lg:grid-cols-2 gap-4" role="region" aria-label="Store availability results" aria-busy="true"></div>
       </section>
@@ -85,11 +87,12 @@
     </template>
 
     <script>
-      const state = { onlyAvail: false, data: null, families: new Set() };
+      const state = { data: null, families: new Set() };
       const elUpdated = document.getElementById('updated');
       const elStores = document.getElementById('stores');
       const elRefresh = document.getElementById('refreshBtn');
-      const elToggleOnlyAvail = document.getElementById('toggleOnlyAvail');
+      const elEmpty = document.getElementById('emptyState');
+      const elEmptyMessage = document.getElementById('emptyStateMessage');
       const elFamilyFilters = document.getElementById('familyFilters');
       const tmplStore = document.getElementById('store-card');
 
@@ -99,6 +102,16 @@
         if (n.includes('pro')) return 'Pro';
         if (n.includes('air')) return 'Air';
         return 'Standard';
+      }
+
+      function hideEmptyState(){
+        if (elEmpty) elEmpty.classList.add('hidden');
+      }
+
+      function showEmptyState(message){
+        if (!elEmpty) return;
+        if (elEmptyMessage) elEmptyMessage.textContent = message;
+        elEmpty.classList.remove('hidden');
       }
 
       async function load(force=false){
@@ -120,19 +133,13 @@
           state.data = null;
           elUpdated.textContent = 'Load failed. Please try again later.';
           elStores.innerHTML = '';
+          hideEmptyState();
         } finally {
           elStores.setAttribute('aria-busy','false');
         }
       }
 
       elRefresh.addEventListener('click', ()=>load(true));
-      elToggleOnlyAvail.addEventListener('click', ()=>{
-        state.onlyAvail = !state.onlyAvail;
-        elToggleOnlyAvail.classList.toggle('bg-brand-600');
-        elToggleOnlyAvail.classList.toggle('text-white');
-        elToggleOnlyAvail.setAttribute('aria-pressed', String(state.onlyAvail));
-        render();
-      });
 
       function wireInteractions(){
         elFamilyFilters.addEventListener('click', e => {
@@ -167,14 +174,17 @@
       }
 
       function render(){
-        if (!state.data) return;
+        if (!state.data){
+          hideEmptyState();
+          return;
+        }
         elStores.innerHTML = '';
+        hideEmptyState();
 
         // group availability by store with filters
         const byStore = new Map();
         for (const a of state.data.availability){
           // Treat either explicit buyable flag or 'available' status as available
-          if (state.onlyAvail && !(a.isBuyable || a.status === 'available')) continue;
           const fam = familyOf(a.part);
           if (state.families.size && !state.families.has(fam)) continue;
           const key = a.store.storeNumber || a.store.storeName;
@@ -183,6 +193,16 @@
         }
 
         let stores = Array.from(byStore.values());
+        if (!stores.length){
+          const baseCount = Array.isArray(state.data.availability) ? state.data.availability.length : 0;
+          if (baseCount === 0) {
+            showEmptyState('No pickup slots available right now. Try refreshing later.');
+          } else {
+            showEmptyState('No matching models with the current filters.');
+          }
+          return;
+        }
+        hideEmptyState();
         for (const g of stores){
           const node = tmplStore.content.cloneNode(true);
           const h3 = node.querySelector('h3');
