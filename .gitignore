@@ -1,5 +1,30 @@
+# Dependencies
 node_modules/
+
+# Build artifacts
+dist/
+worker/
+
+# Cloudflare Wrangler local state & secrets
+.wrangler/
+.dev.vars
+
+# Environment variables
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Temporary directories
 .tmp/
-.DS_Store
-assets/tmp/
 tmp/
+assets/tmp/
+
+# OS-specific files
+.DS_Store
