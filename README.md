@@ -1,6 +1,6 @@
 **iPhone Availability: Taiwan Edition (Now With Extra LOLs)**
 
-If you’re hunting iPhone 17 pickup slots across Taiwan and also enjoy software that doesn’t take itself too seriously, you’ve come to the right repo. This Cloudflare Worker scrapes Apple’s public endpoints, caches the results, and serves a slick UI — all while being watched by a robot that takes screenshots like a proud parent at a school play.
+If you’re hunting iPhone 17 pickup slots across Taiwan and also enjoy software that doesn’t take itself too seriously, you’ve come to the right repo. This Cloudflare Worker scrapes Apple’s public endpoints, caches the results, and serves a slick UI.
 
 ![Freshly baked screenshot](assets/screenshot.png)
 
@@ -11,7 +11,6 @@ Warning: If availability is zero, it’s not a bug — it’s just Apple doing A
 - Scrapes Apple’s buy pages for iPhone 17 and friends.
 - Queries Apple’s fulfillment API for in‑store pickup quotes across Taiwan.
 - Caches results in Cloudflare KV and serves a Tailwind UI + JSON API.
-- Features a Playwright-powered paparazzi bot for the homepage (see image above!).
 
 **Try It Locally**
 
