@@ -1,8 +1,3 @@
-// Cloudflare Worker: iPhone 17 pickup availability for Apple Taiwan
-// - Scrapes part numbers from the official /tw buy page (script#metrics)
-// - Calls Apple's fulfillment-messages API to retrieve in-store pickup windows
-// - Serves a Tailwind mobile-first UI and a JSON API
-
 const DEFAULT_APPLE_BASE = "https://www.apple.com";
 const DEFAULT_REGION_PATH = "/tw";
 const DEFAULT_LOCATION_SEEDS = ["Taiwan"];
