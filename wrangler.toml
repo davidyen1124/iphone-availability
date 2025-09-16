@@ -1,6 +1,6 @@
 name = "iphone-availability-tw"
 main = "src/worker.js"
-compatibility_date = "2025-09-13"
+compatibility_date = "2025-06-17"
 workers_dev = true
 
 # Serve static files from ./public (index.html, etc.)
