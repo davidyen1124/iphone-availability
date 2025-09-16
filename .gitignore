@@ -21,10 +21,5 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Temporary directories
-.tmp/
-tmp/
-assets/tmp/
-
 # OS-specific files
 .DS_Store
