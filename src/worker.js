@@ -39,23 +39,31 @@ async function fetchPartsFromBuyPage(conf, familySlug) {
 }
 
 async function fetchIphonePartsForFamilies(conf, families) {
-  const seen = new Set();
-  const parts = [];
-  // Fetch all family buy pages in parallel, but keep merge order by families[]
-  const results = await Promise.all(
-    families.map(slug =>
-      fetchPartsFromBuyPage(conf, slug).catch(() => []) // swallow per-family errors
-    )
-  );
-  for (const list of results) {
-    for (const p of list) {
-      if (!seen.has(p.partNumber)) {
-        seen.add(p.partNumber);
-        parts.push(p);
+  const byPart = new Map();
+  const outcomes = await Promise.allSettled(
+    families.map(async (slug, idx) => {
+      const list = await fetchPartsFromBuyPage(conf, slug);
+      for (const part of list) {
+        if (!byPart.has(part.partNumber)) {
+          byPart.set(part.partNumber, { order: idx, part });
+        }
       }
-    }
+    })
+  );
+
+  const failures = outcomes.filter(o => o.status === "rejected").map(o => o.reason);
+  const parts = Array.from(byPart.values())
+    .sort((a, b) => a.order - b.order)
+    .map(({ part }) => part);
+
+  if (!parts.length) {
+    throw new AggregateError(failures, "no iPhone family parts discovered");
   }
-  if (!parts.length) throw new Error("no iPhone family parts discovered");
+
+  if (failures.length) {
+    console.warn("Some iPhone families failed to load", failures.map(err => err instanceof Error ? err.message : String(err)));
+  }
+
   return parts;
 }
 
